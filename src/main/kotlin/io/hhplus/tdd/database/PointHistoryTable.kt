@@ -16,15 +16,13 @@ class PointHistoryTable {
         id: Long,
         amount: Long,
         transactionType: TransactionType,
-        updateMillis: Long,
     ): PointHistory {
         Thread.sleep(Math.random().toLong() * 300L)
-        val history = PointHistory(
+        val history = PointHistory.create(
             id = cursor++,
             userId = id,
             amount = amount,
             type = transactionType,
-            timeMillis = updateMillis,
         )
         table.add(history)
         return history
@@ -32,5 +30,9 @@ class PointHistoryTable {
 
     fun selectAllByUserId(userId: Long): List<PointHistory> {
         return table.filter { it.userId == userId }
+    }
+
+    fun clear() {
+        table.clear()
     }
 }
