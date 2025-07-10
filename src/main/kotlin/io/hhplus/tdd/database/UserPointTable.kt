@@ -10,14 +10,14 @@ import org.springframework.stereotype.Component
 class UserPointTable {
     private val table = HashMap<Long, UserPoint>()
 
-    fun selectById(id: Long): UserPoint {
+    fun selectById(id: Long): UserPoint? {
         Thread.sleep(Math.random().toLong() * 200L)
-        return table[id] ?: UserPoint(id = id, point = 0, updateMillis = System.currentTimeMillis())
+        return table[id] ?: UserPoint.create(id = id)
     }
 
     fun insertOrUpdate(id: Long, amount: Long): UserPoint {
         Thread.sleep(Math.random().toLong() * 300L)
-        val userPoint = UserPoint(id = id, point = amount, updateMillis = System.currentTimeMillis())
+        val userPoint = UserPoint.create(id = id, point = amount)
         table[id] = userPoint
         return userPoint
     }
