@@ -7,6 +7,12 @@ data class UserPoint private constructor(
 )
 ) {
 
+    init {
+        require(point in MIN_POINT..MAX_POINT) {
+            "포인트는 $MIN_POINT 이상 $MAX_POINT 이하여야 합니다. 현재: $point"
+        }
+    }
+
     companion object {
         const val MIN_POINT = 0L
         const val MAX_POINT = 500_000L
