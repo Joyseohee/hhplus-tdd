@@ -6,7 +6,6 @@ data class PointHistory private constructor(
     val type: TransactionType,
     val amount: Long,
     val timeMillis: Long,
-)
 ) {
     companion object {
         fun create(
@@ -16,6 +15,7 @@ data class PointHistory private constructor(
             amount: Long,
             timeMillis: Long = System.currentTimeMillis()
         ): PointHistory {
+            require(amount > 0) { "금액은 0보다 커야 합니다." }
             return PointHistory(id, userId, type, amount, timeMillis)
         }
     }
@@ -30,3 +30,4 @@ data class PointHistory private constructor(
 enum class TransactionType {
     CHARGE, USE
 }
+
