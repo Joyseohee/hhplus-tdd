@@ -4,7 +4,6 @@ data class UserPoint private constructor(
     val id: Long,
     val point: Long,
     val updateMillis: Long,
-)
 ) {
 
     init {
@@ -23,3 +22,16 @@ data class UserPoint private constructor(
         }
     }
 
+    // 충전 정책(외부에서 알 필요 없음)
+    private fun validateChargePolicy(chargingPoint: Long) {
+        require(chargingPoint >= MIN_TRANSACTION_AMOUNT) {  "충전 금액은 $MIN_TRANSACTION_AMOUNT 이상이어야 합니다. 현재: $chargingPoint" }
+        require(point + chargingPoint <= MAX_POINT) {"포인트 잔고는 ${MAX_POINT}를 초과할 수 없습니다. 현재 잔고: $point, 충전 금액: $chargingPoint"}
+    }
+
+
+    // point 충전
+    fun charge(amount: Long): UserPoint {
+        validateChargePolicy(amount)
+        return copy(point = point + amount)
+    }
+}
