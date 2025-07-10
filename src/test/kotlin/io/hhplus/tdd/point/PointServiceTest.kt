@@ -321,30 +321,63 @@ class PointServiceTest : BehaviorSpec({
 		}
 	}
 
-		/**
-		 * 도메인 객체 테스트 및 함수 호출 여부 만으로 확인하기 어려운 영역 검증
-		 * 1. 실제 충전/사용 시 상태 변경이 의도한 대로 되었는가
-		 * 2. 예외 발생 시 롤백이 되었는가
-		 */
-		context("통합 테스트 : 실제 객체로 상태 검증") {
+	/**
+	 * 도메인 객체 테스트 및 함수 호출 여부 만으로 확인하기 어려운 영역 검증
+	 * 1. 실제 충전/사용 시 상태 변경이 의도한 대로 되었는가
+	 * 2. 예외 발생 시 롤백이 되었는가
+	 */
+	context("통합 테스트 : 실제 객체로 상태 검증") {
+		val userPointTable = UserPointTable()
+		val pointHistoryTable = PointHistoryTable()
+		val pointService = PointService(userPointTable, pointHistoryTable)
 
-			given("실제 저장소에 포인트를 충전하고 사용하면") {
-				`when`("충전과 사용이 성공적으로 이뤄질 때") {
-					then("잔고와 히스토리가 모두 반영된다") {
+		val userId = 1L
 
-					}
+		beforeTest {
+			userPointTable.insertOrUpdate(userId, 0L)
+			pointHistoryTable.clear()
+		}
+
+		given("실제 저장소에 포인트를 충전하고 사용하면") {
+			`when`("충전과 사용이 성공적으로 이뤄질 때") {
+				then("잔고와 히스토리가 모두 반영된다") {
+					pointService.chargePoint(userId, 10_000L)
+					pointService.chargePoint(userId, 5_000L)
+					pointService.usePoint(userId, 3_000L)
+
+					val point = pointService.getUserPoint(userId)
+					point.point shouldBe 12_000L
+
+					val histories = pointService.getUserPointHistory(userId)
+					histories shouldHaveSize 3
+					histories.count { it.type == TransactionType.CHARGE } shouldBe 2
+					histories.count { it.type == TransactionType.USE } shouldBe 1
 				}
+			}
 
-				`when`("충전 금액이 최대 잔고를 초과하면") {
-					then("예외가 발생하고 저장소에는 변화가 없다") {
+			`when`("충전 금액이 최대 잔고를 초과하면") {
+				then("예외가 발생하고 저장소에는 변화가 없다") {
+					pointService.chargePoint(userId, 490_000L)
 
+					shouldThrow<IllegalArgumentException> {
+						pointService.chargePoint(userId, 20_000L)
 					}
+
+					pointService.getUserPoint(userId).point shouldBe 490_000L
+					pointService.getUserPointHistory(userId) shouldHaveSize 1
 				}
+			}
 
-				`when`("사용 금액이 잔고보다 크면") {
-					then("예외가 발생하고 저장소에는 변화가 없다") {
+			`when`("사용 금액이 잔고보다 크면") {
+				then("예외가 발생하고 저장소에는 변화가 없다") {
+					pointService.chargePoint(userId, 10_000L)
 
+					shouldThrow<IllegalArgumentException> {
+						pointService.usePoint(userId, 20_000L)
 					}
+
+					pointService.getUserPoint(userId).point shouldBe 10_000L
+					pointService.getUserPointHistory(userId) shouldHaveSize 1
 				}
 			}
 		}
